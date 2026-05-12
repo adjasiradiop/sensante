@@ -1,12 +1,11 @@
 # api/main.py
-# SenSante API-Assistant pre-diagnostic medical
-# Lab 3-Integration de Modeles IA-ESP/UCAD
-
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
-#---Schemas Pydantic--
+
+# --- Schemas Pydantic ---
 class PatientInput(BaseModel):
     age: int = Field(..., ge=0, le=120)
     sexe: str = Field(...)
@@ -16,18 +15,29 @@ class PatientInput(BaseModel):
     fatigue: bool = Field(...)
     maux_tete: bool = Field(...)
     region: str = Field(...)
+
 class DiagnosticOutput(BaseModel):
     diagnostic: str
     probabilite: float
     confiance: str
     message: str
-#---Application FastAPI--
+
+# --- Application FastAPI ---
 app = FastAPI(
     title="SenSante API",
     description="Assistant pre-diagnostic medical pour le Senegal",
     version="0.2.0"
 )
-#---Chargement du modele (une seule fois)--
+
+# ✅ CORS - à ajouter obligatoirement pour que le navigateur accepte les requêtes
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Chargement du modele (une seule fois) ---
 print("Chargement du modele...")
 model = joblib.load("models/model.pkl")
 le_sexe = joblib.load("models/encoder_sexe.pkl")
@@ -35,28 +45,45 @@ le_region = joblib.load("models/encoder_region.pkl")
 feature_cols = joblib.load("models/feature_cols.pkl")
 print(f"Modele charge : {list(model.classes_)}")
 
-#---Routes--
+# --- Routes ---
 @app.get("/health")
 def health_check():
     return {"status": "ok", "message": "SenSante API is running"}
+
+@app.get("/model-info")
+def model_info():
+    """Informations sur le modele charge."""
+    return {
+        "type": type(model).__name__,
+        "nombre_arbres": model.n_estimators,
+        "classes": list(model.classes_),
+        "nombre_features": model.n_features_in_
+    }
+
 @app.post("/predict", response_model=DiagnosticOutput)
 def predict(patient: PatientInput):
-   # Encoder
+    # Encoder sexe
     try:
         sexe_enc = le_sexe.transform([patient.sexe])[0]
     except ValueError:
         return DiagnosticOutput(
-            diagnostic="erreur", probabilite=0.0,
+            diagnostic="erreur",
+            probabilite=0.0,
             confiance="aucune",
-            message=f"Sexe invalide : {patient.sexe}") 
+            message=f"Sexe invalide : {patient.sexe}"
+        )
+
+    # Encoder region
     try:
         region_enc = le_region.transform([patient.region])[0]
     except ValueError:
         return DiagnosticOutput(
-            diagnostic="erreur", probabilite=0.0,
+            diagnostic="erreur",
+            probabilite=0.0,
             confiance="aucune",
-            message=f"Region inconnue : {patient.region}")
-    
+            message=f"Region inconnue : {patient.region}"
+        )
+
     # Features
     features = np.array([[
         patient.age, sexe_enc, patient.temperature,
@@ -68,17 +95,19 @@ def predict(patient: PatientInput):
     # Prediction
     diagnostic = model.predict(features)[0]
     proba_max = float(model.predict_proba(features)[0].max())
-    confiance = ("haute" if proba_max >= 0.7
+    confiance = (
+        "haute" if proba_max >= 0.7
         else "moyenne" if proba_max >= 0.4
-        else "faible")
-    
+        else "faible"
+    )
+
     messages = {
         "palu": "Suspicion de paludisme. Consultez rapidement.",
         "grippe": "Suspicion de grippe. Repos et hydratation.",
         "typh": "Suspicion de typhoide. Consultation necessaire.",
         "sain": "Pas de pathologie detectee."
     }
-    
+
     return DiagnosticOutput(
         diagnostic=diagnostic,
         probabilite=round(proba_max, 2),
