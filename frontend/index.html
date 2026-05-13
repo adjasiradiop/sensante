@@ -62,9 +62,12 @@
           </select>
         </div>
 
-        <button onclick="diagnostiquer()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-md">
+        <button onclick="diagnostiquer()" id="btn-diag" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-md transition">
           Diagnostiquer
         </button>
+
+        <!-- Zone d'erreur visible -->
+        <div id="error-box" class="hidden mt-3 bg-red-50 border border-red-300 text-red-700 rounded-lg p-3 text-sm"></div>
       </div>
 
       <div id="result-section">
@@ -82,7 +85,8 @@
   </footer>
 
   <script>
-    const API_URL = "";
+    // ✅ URL corrigée : pointe vers ton backend Hugging Face Space
+    const API_URL = "https://adjaaaa-sensante.hf.space";
 
     const icones = {
       "palu": "🦟",
@@ -102,17 +106,42 @@
       "sain": { bg: "bg-green-100", text: "text-green-800", bar: "bg-green-500" }
     };
 
+    function showError(msg) {
+      const box = document.getElementById("error-box");
+      box.textContent = msg;
+      box.classList.remove("hidden");
+    }
+
+    function hideError() {
+      document.getElementById("error-box").classList.add("hidden");
+    }
+
     async function diagnostiquer() {
+      hideError();
+
+      const age = document.getElementById("age").value;
+      const temperature = document.getElementById("temperature").value;
+
+      // Validation basique avant d'envoyer
+      if (!age || !temperature) {
+        showError("⚠️ Veuillez renseigner au minimum l'âge et la température.");
+        return;
+      }
+
       const patient = {
-        age: parseInt(document.getElementById("age").value),
+        age: parseInt(age),
         sexe: document.getElementById("sexe").value,
-        temperature: parseFloat(document.getElementById("temperature").value),
-        tension_sys: parseInt(document.getElementById("tension_sys").value),
+        temperature: parseFloat(temperature),
+        tension_sys: parseInt(document.getElementById("tension_sys").value) || 0,
         toux: document.getElementById("toux").checked,
         fatigue: document.getElementById("fatigue").checked,
         maux_tete: document.getElementById("maux_tete").checked,
         region: document.getElementById("region").value
       };
+
+      const btn = document.getElementById("btn-diag");
+      btn.textContent = "Chargement...";
+      btn.disabled = true;
 
       try {
         const response = await fetch(API_URL + "/predict", {
@@ -120,15 +149,24 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(patient)
         });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Erreur serveur ${response.status} : ${errText}`);
+        }
+
         const resultat = await response.json();
         afficherResultat(resultat);
       } catch (e) {
-        alert("Erreur de connexion au serveur.");
+        console.error(e);
+        showError("❌ " + e.message + "\n\nVérifie que le Space Hugging Face est bien démarré (pas en veille).");
+      } finally {
+        btn.textContent = "Diagnostiquer";
+        btn.disabled = false;
       }
     }
 
     function afficherResultat(r) {
-      // Correction cruciale : forcer la clé en minuscule [cite: 332]
       const key = r.diagnostic.toLowerCase();
       const c = couleurs[key] || couleurs["sain"];
       const ico = icones[key] || "🩺";
@@ -155,7 +193,6 @@
           </div>
         </div>`;
 
-      // Appel automatique du LLM pour l'explication (Lab 5) [cite: 333]
       demanderExplication(r);
     }
 
@@ -184,11 +221,14 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(explainData)
         });
+
+        if (!response.ok) throw new Error(`Erreur ${response.status}`);
+
         const res = await response.json();
         document.getElementById("expl-text").className = "text-gray-700 text-sm leading-relaxed";
-        document.getElementById("expl-text").innerText = res.explication; // Affichage de la réponse en Wolof/Français [cite: 366]
+        document.getElementById("expl-text").innerText = res.explication;
       } catch (e) {
-        document.getElementById("expl-text").innerText = "Explication non disponible.";
+        document.getElementById("expl-text").innerText = "Explication non disponible. (" + e.message + ")";
       }
     }
   </script>
