@@ -23,9 +23,7 @@
 
         <div class="mb-3">
           <label class="block text-sm font-medium text-gray-700 mb-1">Âge</label>
-          <input type="number" id="age"
-            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Ex: 28" min="0" max="120">
+          <input type="number" id="age" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ex: 28">
         </div>
 
         <div class="mb-3">
@@ -38,33 +36,20 @@
 
         <div class="mb-3">
           <label class="block text-sm font-medium text-gray-700 mb-1">Température (°C)</label>
-          <input type="number" id="temperature" step="0.1"
-            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Ex: 38.5" min="35" max="42">
+          <input type="number" id="temperature" step="0.1" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ex: 38.5">
         </div>
 
         <div class="mb-3">
           <label class="block text-sm font-medium text-gray-700 mb-1">Tension systolique</label>
-          <input type="number" id="tension_sys"
-            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Ex: 120" min="60" max="250">
+          <input type="number" id="tension_sys" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ex: 120">
         </div>
 
         <div class="mb-3">
           <label class="block text-sm font-medium text-gray-700 mb-2">Symptômes</label>
           <div class="space-y-2">
-            <label class="flex items-center">
-              <input type="checkbox" id="toux" class="rounded text-blue-600 mr-2">
-              <span class="text-gray-700">Toux</span>
-            </label>
-            <label class="flex items-center">
-              <input type="checkbox" id="fatigue" class="rounded text-blue-600 mr-2">
-              <span class="text-gray-700">Fatigue</span>
-            </label>
-            <label class="flex items-center">
-              <input type="checkbox" id="maux_tete" class="rounded text-blue-600 mr-2">
-              <span class="text-gray-700">Maux de tête</span>
-            </label>
+            <label class="flex items-center"><input type="checkbox" id="toux" class="mr-2"> Toux</label>
+            <label class="flex items-center"><input type="checkbox" id="fatigue" class="mr-2"> Fatigue</label>
+            <label class="flex items-center"><input type="checkbox" id="maux_tete" class="mr-2"> Maux de tête</label>
           </div>
         </div>
 
@@ -73,19 +58,11 @@
           <select id="region" class="w-full border border-gray-300 rounded-lg p-2">
             <option value="Dakar">Dakar</option>
             <option value="Thies">Thies</option>
-            <option value="Saint-Louis">Saint-Louis</option>
             <option value="Ziguinchor">Ziguinchor</option>
-            <option value="Tambacounda">Tambacounda</option>
-            <option value="Kaolack">Kaolack</option>
-            <option value="Diourbel">Diourbel</option>
-            <option value="Fatick">Fatick</option>
-            <option value="Kolda">Kolda</option>
-            <option value="Matam">Matam</option>
           </select>
         </div>
 
-        <button onclick="diagnostiquer()" id="btn-diag"
-          class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-200 shadow-md">
+        <button onclick="diagnostiquer()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-md">
           Diagnostiquer
         </button>
       </div>
@@ -93,33 +70,11 @@
       <div id="result-section">
         <div class="bg-white rounded-xl shadow-md p-6 text-center text-gray-400">
           <p class="text-4xl mb-3">🩺</p>
-          <p class="font-medium">Remplissez le formulaire</p>
-          <p class="text-sm mt-1">puis cliquez sur Diagnostiquer</p>
+          <p>Remplissez le formulaire pour voir le diagnostic.</p>
         </div>
       </div>
 
     </div>
-
-    <div id="historique-section" class="mt-6 hidden">
-      <div class="bg-white rounded-xl shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Historique des consultations</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-gray-200">
-                <th class="text-left py-2 px-3 text-gray-600 font-medium">#</th>
-                <th class="text-left py-2 px-3 text-gray-600 font-medium">Age / Sexe</th>
-                <th class="text-left py-2 px-3 text-gray-600 font-medium">Diagnostic</th>
-                <th class="text-left py-2 px-3 text-gray-600 font-medium">Probabilité</th>
-                <th class="text-left py-2 px-3 text-gray-600 font-medium">Heure</th>
-              </tr>
-            </thead>
-            <tbody id="historique-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </main>
 
   <footer class="text-center text-gray-400 text-sm py-4">
@@ -127,9 +82,8 @@
   </footer>
 
   <script>
-    const API_URL = "http://localhost:8000";
+    const API_URL = "";
 
-    // Icônes emoji corrigées pour correspondre aux retours API probables
     const icones = {
       "palu": "🦟",
       "paludisme": "🦟",
@@ -139,51 +93,14 @@
       "sain": "✅"
     };
 
-    const historique = [];
-
-    function ajouterHistorique(patient, resultat) {
-      const heure = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-      historique.unshift({
-        age: patient.age,
-        sexe: patient.sexe,
-        diagnostic: resultat.diagnostic,
-        probabilite: Math.round(resultat.probabilite * 100),
-        heure: heure
-      });
-      if (historique.length > 5) historique.pop();
-      afficherHistorique();
-    }
-
-    function afficherHistorique() {
-      const couleurs = {
-        "palu": "bg-red-100 text-red-800",
-        "paludisme": "bg-red-100 text-red-800",
-        "grippe": "bg-orange-100 text-orange-800",
-        "typh": "bg-yellow-100 text-yellow-800",
-        "typhoide": "bg-yellow-100 text-yellow-800",
-        "sain": "bg-green-100 text-green-800"
-      };
-
-      document.getElementById("historique-section").classList.remove("hidden");
-      const tbody = document.getElementById("historique-body");
-      tbody.innerHTML = historique.map((entry, i) => {
-        const key = entry.diagnostic.toLowerCase();
-        const couleur = couleurs[key] || "bg-green-100 text-green-800";
-        const ico = icones[key] || "🩺";
-        return `
-          <tr class="border-b border-gray-100 hover:bg-gray-50">
-            <td class="py-2 px-3 text-gray-400">${historique.length - i}</td>
-            <td class="py-2 px-3 text-gray-700">${entry.age} ans / ${entry.sexe}</td>
-            <td class="py-2 px-3">
-              <span class="${couleur} px-2 py-1 rounded-full text-xs font-medium">
-                ${ico} ${entry.diagnostic.toUpperCase()}
-              </span>
-            </td>
-            <td class="py-2 px-3 text-gray-700 font-medium">${entry.probabilite}%</td>
-            <td class="py-2 px-3 text-gray-400">${entry.heure}</td>
-          </tr>`;
-      }).join("");
-    }
+    const couleurs = {
+      "palu": { bg: "bg-red-100", text: "text-red-800", bar: "bg-red-500" },
+      "paludisme": { bg: "bg-red-100", text: "text-red-800", bar: "bg-red-500" },
+      "grippe": { bg: "bg-orange-100", text: "text-orange-800", bar: "bg-orange-500" },
+      "typh": { bg: "bg-yellow-100", text: "text-yellow-800", bar: "bg-yellow-500" },
+      "typhoide": { bg: "bg-yellow-100", text: "text-yellow-800", bar: "bg-yellow-500" },
+      "sain": { bg: "bg-green-100", text: "text-green-800", bar: "bg-green-500" }
+    };
 
     async function diagnostiquer() {
       const patient = {
@@ -197,40 +114,21 @@
         region: document.getElementById("region").value
       };
 
-      if (!patient.age || isNaN(patient.temperature) || !patient.tension_sys) {
-        afficherErreur("Veuillez remplir les champs numériques (Âge, Température, Tension).");
-        return;
-      }
-
-      afficherChargement();
-
       try {
         const response = await fetch(API_URL + "/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(patient)
         });
-
-        if (!response.ok) throw new Error("Erreur serveur");
         const resultat = await response.json();
-
         afficherResultat(resultat);
-        ajouterHistorique(patient, resultat);
-      } catch (error) {
-        afficherErreur("Erreur de connexion au serveur backend.");
+      } catch (e) {
+        alert("Erreur de connexion au serveur.");
       }
     }
 
     function afficherResultat(r) {
-      const couleurs = {
-        "palu": { bg: "bg-red-100", text: "text-red-800", bar: "bg-red-500", badge: "bg-red-500" },
-        "paludisme": { bg: "bg-red-100", text: "text-red-800", bar: "bg-red-500", badge: "bg-red-500" },
-        "grippe": { bg: "bg-orange-100", text: "text-orange-800", bar: "bg-orange-500", badge: "bg-orange-500" },
-        "typh": { bg: "bg-yellow-100", text: "text-yellow-800", bar: "bg-yellow-500", badge: "bg-yellow-500" },
-        "typhoide": { bg: "bg-yellow-100", text: "text-yellow-800", bar: "bg-yellow-500", badge: "bg-yellow-500" },
-        "sain": { bg: "bg-green-100", text: "text-green-800", bar: "bg-green-500", badge: "bg-green-500" }
-      };
-
+      // Correction cruciale : forcer la clé en minuscule [cite: 332]
       const key = r.diagnostic.toLowerCase();
       const c = couleurs[key] || couleurs["sain"];
       const ico = icones[key] || "🩺";
@@ -243,49 +141,42 @@
             <span class="text-4xl">${ico}</span>
             <div>
               <p class="text-sm text-gray-600">Diagnostic :</p>
-              <p class="text-2xl font-bold ${c.text} uppercase mt-1">${r.diagnostic}</p>
+              <p class="text-2xl font-bold ${c.text} uppercase">${r.diagnostic}</p>
             </div>
           </div>
           <div class="mb-4">
             <div class="flex justify-between mb-1">
-              <span class="text-sm text-gray-600">Probabilité</span>
-              <span class="text-sm font-bold ${c.text}">${pct}%</span>
+              <span class="text-sm">Probabilité</span>
+              <span class="text-sm font-bold">${pct}%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3">
-              <div class="${c.bar} h-3 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+              <div class="${c.bar} h-3 rounded-full" style="width: ${pct}%"></div>
             </div>
           </div>
-          <div class="flex items-center gap-2 mb-3">
-            <span class="${c.badge} text-white text-xs px-2 py-1 rounded-full">${r.confiance}</span>
-            <span class="text-sm text-gray-600">confiance</span>
-          </div>
-          <div class="bg-gray-50 rounded-lg p-3 mb-3">
-            <p class="text-sm text-gray-700">${r.message}</p>
-          </div>
         </div>`;
-      
+
+      // Appel automatique du LLM pour l'explication (Lab 5) [cite: 333]
       demanderExplication(r);
     }
 
-    async function demanderExplication(diagnostic_data) {
+    async function demanderExplication(diag) {
       const explainData = {
-        diagnostic: diagnostic_data.diagnostic,
-        probabilite: diagnostic_data.probabilite,
+        diagnostic: diag.diagnostic,
+        probabilite: diag.probabilite,
         age: parseInt(document.getElementById("age").value),
         sexe: document.getElementById("sexe").value,
         temperature: parseFloat(document.getElementById("temperature").value),
         region: document.getElementById("region").value
       };
 
-      const section = document.getElementById("result-section");
+      const section = document.getElementById("result-section").querySelector(".bg-white");
       const explDiv = document.createElement("div");
-      explDiv.id = "explication-zone";
       explDiv.innerHTML = `
-        <div class="mt-4 border-t border-gray-200 pt-4">
-          <p class="text-sm font-semibold text-gray-700 mb-2">🤖 Explication (Llama 3)</p>
-          <p class="text-sm text-gray-400 italic animate-pulse">Génération en cours...</p>
+        <div class="mt-4 bg-purple-50 rounded-lg p-4 border border-purple-200">
+          <p class="text-sm text-purple-600 font-medium mb-1">Explication (Llama 3)</p>
+          <p id="expl-text" class="text-gray-500 text-sm animate-pulse">Génération en cours...</p>
         </div>`;
-      section.querySelector(".bg-white").appendChild(explDiv);
+      section.appendChild(explDiv);
 
       try {
         const response = await fetch(API_URL + "/explain", {
@@ -293,33 +184,12 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(explainData)
         });
-        if (response.ok) {
-          const result = await response.json();
-          explDiv.innerHTML = `
-            <div class="mt-4 border-t border-gray-200 pt-4">
-              <p class="text-sm font-semibold text-gray-700 mb-2">🤖 Explication (Llama 3)</p>
-              <p class="text-sm text-gray-600 leading-relaxed">${result.explication}</p>
-            </div>`;
-        }
-      } catch (error) {
-        explDiv.innerHTML = `<p class="text-sm text-red-500 italic mt-2">Explication indisponible.</p>`;
+        const res = await response.json();
+        document.getElementById("expl-text").className = "text-gray-700 text-sm leading-relaxed";
+        document.getElementById("expl-text").innerText = res.explication; // Affichage de la réponse en Wolof/Français [cite: 366]
+      } catch (e) {
+        document.getElementById("expl-text").innerText = "Explication non disponible.";
       }
-    }
-
-    function afficherChargement() {
-      document.getElementById("result-section").innerHTML = `
-        <div class="bg-white rounded-xl shadow-md p-6 text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p class="text-gray-500">Analyse en cours...</p>
-        </div>`;
-    }
-
-    function afficherErreur(msg) {
-      document.getElementById("result-section").innerHTML = `
-        <div class="bg-red-50 border border-red-200 rounded-xl p-6">
-          <p class="text-red-700 font-medium">${msg}</p>
-          <p class="text-red-500 text-sm mt-2">Vérifiez la connexion au serveur (Port 8000).</p>
-        </div>`;
     }
   </script>
 </body>
