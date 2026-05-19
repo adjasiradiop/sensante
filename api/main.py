@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from groq import Groq
+import httpx
 
 # ─────────────────────────────────────────
 # 1. CONFIGURATION & ENVIRONNEMENT
@@ -38,7 +39,10 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 
 if groq_api_key:
     try:
-        groq_client = Groq(api_key=groq_api_key)
+        groq_client = Groq(
+            api_key=groq_api_key,
+            http_client=httpx.Client(timeout=30.0)
+        )
         print(f"GROQ INITIALISÉ : Clé détectée (début : {groq_api_key[:6]}...)")
     except Exception as e:
         print(f"ERREUR INITIALISATION GROQ : {e}")
@@ -61,14 +65,12 @@ BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BASE_DIR.parent
 MODELS_DIR = ROOT_DIR / "models"
 
-# Débogage : Liste les fichiers pour vérifier la casse (minuscules/majuscules)
 if MODELS_DIR.exists():
     print(f"📂 Contenu du dossier models : {os.listdir(MODELS_DIR)}")
 else:
     print("❌ DOSSIER MODELS INTROUVABLE !")
 
 try:
-    # On charge les 3 fichiers indispensables
     model = joblib.load(MODELS_DIR / "model.pkl")
     le_sexe = joblib.load(MODELS_DIR / "encoder_sexe.pkl")
     le_region = joblib.load(MODELS_DIR / "encoder_region.pkl")
@@ -117,10 +119,9 @@ def predict(patient: PatientInput):
         raise HTTPException(status_code=500, detail="Le modèle d'intelligence artificielle n'est pas prêt.")
 
     try:
-        # Encodage (Attention : doit correspondre aux valeurs d'entraînement)
         sexe_enc = le_sexe.transform([patient.sexe])[0]
         region_enc = le_region.transform([patient.region])[0]
-        
+
         features = np.array([[
             patient.age, sexe_enc, patient.temperature, patient.tension_sys,
             int(patient.toux), int(patient.fatigue), int(patient.maux_tete),
@@ -168,6 +169,7 @@ def explain(data: ExplainInput):
         )
         return {"explication": completion.choices[0].message.content}
     except Exception as e:
+        print(f"ERREUR GROQ DÉTAILLÉE : {type(e).__name__} - {str(e)}")
         return {"explication": f"Dina bakh, souci technique : {str(e)}"}
 
 # ─────────────────────────────────────────
@@ -188,7 +190,7 @@ def serve_frontend():
 @app.get("/health")
 def health():
     return {
-        "status": "ok", 
+        "status": "ok",
         "model_ready": model is not None,
         "groq_ready": groq_client is not None
     }
